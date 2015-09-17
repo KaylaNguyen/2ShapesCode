@@ -1,0 +1,186 @@
+# Triangle detection code adapted from Keying '17
+# written by Kayla Nguyen'18
+
+# NumPy adds support for large, multi-dimensional arrays and matrices
+# and a large library of high-level mathematical functions
+# cv2 supports images
+import math
+import numpy as np
+import cv2
+
+# variables
+# number of vertices
+vertex_num = 3
+# object size (base edge length of triangle) is 50mm
+object_size = 60
+# focal length of MacBook Air camera is 50mm
+# 1mm = 3.779527559 pixels
+focal_length = 4 # * 3.779527559
+# goal distance to maintain (in mm)
+goal_distance = 150
+
+# declare threshold var
+global thresh
+thresh = None
+
+# main method
+def main():
+    # capture a video
+    cap = cv2.VideoCapture(0)
+
+    # repeatedly find the shape
+    while True:
+        # capture frame-by-frame
+        _, frame = cap.read()
+        # find the shape/contours
+        contours = find_shape(frame)
+        # for each contour
+        for cnt in contours:
+            # smooth the edges of contour
+            # counts the number of edges
+            # vertices is an array store coordinates of each vertex
+            # cv2.approxPolyDP(curve, epsilon, closed[, approxCurve])
+            vertices = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
+
+            # check number of vertices
+            if len(vertices) == vertex_num:
+                # get the contour area
+                area = cv2.contourArea(cnt)
+                # get the equivalent diameter
+                # (the diameter of the circle whose area is same as the contour area)
+                equi_d = np.sqrt(4 * area / np.pi)
+                # if the diameter is larger than 100 pixels (3 vertices are separate)
+                if equi_d > 100:
+                    # give color to the detected shape
+                    cv2.drawContours(frame, [cnt], 0, (0, 0, 225), -1)
+
+                    # Calculates the image moments of the triangle.
+                    moment = cv2.moments(cnt)
+                    # extract centroid coordinates
+                    cx = int(moment['m10'] / moment['m00'])
+                    cy = int(moment['m01'] / moment['m00'])
+
+                    # check distance
+                    check_distance(goal_distance, vertices)
+                    # check center
+                    check_center(cap, cx, cy)
+                    # check parallel
+                    check_parallel(vertices, cx)
+
+        # display image in the specified window
+        cv2.imshow('binary', thresh)
+        cv2.imshow('contours', frame)
+        # displays the image for specified milliseconds.
+        if cv2.waitKey(1) & 0xff == 27:
+            break
+
+    # when everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+# method to find shape
+def find_shape(frame):
+    # operations on the frame aka image
+    imgray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # detect edge
+    # Canny(image, threshold1, threshold2)
+    edges = cv2.Canny(imgray, 130, 200)
+    # set threshold
+    # threshold(src, thresh(used to classify the pixel values) , maxval, type)
+    global thresh
+    _, thresh = cv2.threshold(edges, 127, 255, 0)
+    # find the shape/contours
+    contours, _ = cv2.findContours(thresh, 2, 1)
+    return contours
+
+
+# method to compute distance from camera to object
+# by using distance formula
+# NOTE: the result is not accurate
+def compute_distance(vertices):
+    # get the coordinates of 2 base vertices
+    cx1 = vertices[1][0][0]
+    cy1 = vertices[1][0][1]
+
+    cx2 = vertices[2][0][0]
+    cy2 = vertices[2][0][1]
+
+    # get the coordinates of mid point of triangle base edge
+    cx_mid = (cx1 + cx2)/2
+    cy_mid = (cy1 + cy2)/2
+
+    # get the coordinates of top vertex
+    cx_top = vertices[0][0][0]
+    cy_top = vertices[0][0][1]
+
+    # compute the image size of the triangle base edge (in pixels)
+    image_size = math.sqrt((cx_mid - cx_top) ** 2 + (cy_mid - cy_top) ** 2)
+    print "image size is %s" %image_size
+    # compute the distance by multiply the object size by focal length
+    # then divide all by image size
+    current_distance = (object_size * focal_length) / image_size
+    print "Current distance is %s mm" % current_distance
+    return current_distance
+
+
+# method to maintain distance
+def check_distance(goal_distance, vertices):
+    # compute current distance
+    current_distance = compute_distance(vertices)
+    # if distance is too close
+    if current_distance < goal_distance - 10:
+        print "Move back!"
+    # if distance is too far
+    elif current_distance > goal_distance + 10:
+        print "Move forward!"
+    # if distance is met
+    else:
+        print "Right distance"
+
+
+# method to maintain center
+# determine the center of the triangle
+# by comparing the centroid coordinates with the screen's size
+def check_center(cap, cx, cy):
+    # get the screen's size
+    video_width = cap.get(3)
+    video_height = cap.get(4)
+
+    if cx > video_width / 2 + 20:
+        print "Move left!"
+    elif cx < video_width / 2 - 20:
+        print "Move right!"
+    else:
+        print "Horizontally center!"
+
+    if cy > video_height / 2 + 10:
+        print "Move up!"
+    elif cy < video_height / 2 - 10:
+        print "Move down!"
+    else:
+        print "Vertically center!"
+
+
+# method to maintain parallel
+# determine the parallelism of the triangle
+# by comparing the centroid x coordinates
+# with the top vertex's x coordinate
+def check_parallel(vertices, cx):
+    # a is an array storing 3 vertices of the triangle
+    a = [vertices[0][0][0], vertices[1][0][0], vertices[2][0][0]]
+    # sort vertices' coordinates from smallest to biggest
+    a.sort()
+
+    if cx < a[1] - 3:
+        print "Rotate clockwise!"
+    elif cx > a[1] + 3:
+        print "Rotate counterclockwise!"
+    else:
+        print "You are now parallel with object ahead"
+
+# run the main method
+if __name__ == '__main__':
+    pressedKey = raw_input("Press enter to start")
+    if pressedKey is not None:
+        main()
