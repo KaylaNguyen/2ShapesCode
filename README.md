@@ -21,4 +21,5 @@ Triangle detection code adapted from Keying Gu'17, written by Kayla Nguyen'18
 * determines rotation of object
 
 *Summer Research 2015*
+
 *CS395 Independent Study Fall 2015*
