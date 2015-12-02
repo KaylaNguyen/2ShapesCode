@@ -28,6 +28,11 @@ goal_distance = 150
 global thresh
 thresh = None
 
+# display flag to check whether or not show the display with camera data
+# set to true to see the display to debug
+# set to false to omit the display to run on RasPi without monitor
+global displayOn = False
+
 # Initialise the PWM device using the default address
 # pwm = PWM(0x40)
 # Note if you'd like more debug output you can instead run:
@@ -40,6 +45,8 @@ stopValue = 0
 
 # main method
 def main():
+	global displayOn
+
     # capture a video
     cap = cv2.VideoCapture(0)
 
@@ -81,17 +88,18 @@ def main():
                     check_center(cap, cx, cy)
                     # check distance
                     check_distance(goal_distance, vertices)
-
-        # display image in the specified window
-        cv2.imshow('binary', thresh)
-        cv2.imshow('contours', frame)
+        if displayOn:
+        	# display image in the specified window
+        	cv2.imshow('binary', thresh)
+        	cv2.imshow('contours', frame)
         # displays the image for specified milliseconds.
         if cv2.waitKey(1) & 0xff == 27:
             break
 
     # when everything done, release the capture
     cap.release()
-    cv2.destroyAllWindows()
+    if displayOn:
+   		cv2.destroyAllWindows()
 
 
 # method to find shape

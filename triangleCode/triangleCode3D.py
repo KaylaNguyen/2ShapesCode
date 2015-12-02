@@ -24,6 +24,12 @@ goal_distance = 150
 global thresh
 thresh = None
 
+# display flag to check whether or not show the display with camera data
+# set to true to see the display to debug
+# set to false to omit the display to run on RasPi without monitor
+global displayOn
+displayOn = False
+
 # main method
 def main():
     # capture a video
@@ -70,16 +76,18 @@ def main():
                     # check distance
                     check_distance(goal_distance, vertices)
 
-        # display image in the specified window
-        cv2.imshow('binary', thresh)
-        cv2.imshow('contours', frame)
+        if displayOn:
+            # display image in the specified window
+            cv2.imshow('binary', thresh)
+            cv2.imshow('contours', frame)
         # displays the image for specified milliseconds.
         if cv2.waitKey(1) & 0xff == 27:
             break
 
     # when everything done, release the capture
     cap.release()
-    cv2.destroyAllWindows()
+    if displayOn:
+        cv2.destroyAllWindows()
 
 
 # method to find shape
