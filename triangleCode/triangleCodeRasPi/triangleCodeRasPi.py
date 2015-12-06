@@ -20,7 +20,7 @@ vertex_num = 3
 object_size = 60
 # focal length of MacBook Air camera is 50mm
 # 1mm = 3.779527559 pixels
-focal_length = 4 # * 3.779527559
+focal_length = 600 # * 3.779527559
 # goal distance to maintain (in mm)
 goal_distance = 150
 
@@ -31,12 +31,13 @@ thresh = None
 # display flag to check whether or not show the display with camera data
 # set to true to see the display to debug
 # set to false to omit the display to run on RasPi without monitor
-global displayOn = False
+global displayOn
+displayOn = False
 
 # Initialise the PWM device using the default address
-# pwm = PWM(0x40)
+pwm = PWM(0x40)
 # Note if you'd like more debug output you can instead run:
-pwm = PWM(0x40, debug=True)
+# pwm = PWM(0x40, debug=True)
 pwm.setPWMFreq(60)                        # Set frequency to 60 Hz
 
 forwardPulse = 150  # Min pulse length out of 4096
@@ -45,7 +46,7 @@ stopValue = 0
 
 # main method
 def main():
-	global displayOn
+	# global displayOn
 
     # capture a video
     cap = cv2.VideoCapture(0)
@@ -83,11 +84,12 @@ def main():
                     cy = int(moment['m01'] / moment['m00'])
 
                     # check parallel
-                    check_parallel(vertices, cx)
+                    if check_parallel(vertices, cx):
                     # check center
-                    check_center(cap, cx, cy)
-                    # check distance
-                    check_distance(goal_distance, vertices)
+                    # check_center(cap, cx, cy)
+                        while check_distance(goal_distance, vertices) is not True:
+                            # check distance
+                            check_distance(goal_distance, vertices)
         if displayOn:
         	# display image in the specified window
         	cv2.imshow('binary', thresh)
@@ -159,6 +161,8 @@ def check_distance(goal_distance, vertices):
     else:
         print "Right distance"
         stopMoving()
+        return True
+    return False
 
 
 # method to maintain center
@@ -209,6 +213,8 @@ def check_parallel(vertices, cx):
     else:
         print "You are now parallel with object ahead"
         stopMoving()
+        return True
+    return False
 
 # method to check if the triangle is tilted forward or backward
 # by using distance formula
