@@ -12,13 +12,13 @@
 #### triangleCode
 Triangle detection code adapted from Keying Gu'17, written by Kayla Nguyen'18
 
-* patterns: a isosceles triangle 
+* patterns: an equilateral triangle
 
 * detects distance from camera to object
 
 * fixes object center
 
-* determines rotation of object
+* determines 3D rotations of object
 
 *Summer Research 2015*
 
