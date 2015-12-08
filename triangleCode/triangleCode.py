@@ -15,7 +15,7 @@ vertex_num = 3
 object_size = 60
 # focal length of MacBook Air camera is 50mm
 # 1mm = 3.779527559 pixels
-focal_length = 4 # * 3.779527559
+focal_length = 600 # * 3.779527559
 # goal distance to maintain (in mm)
 goal_distance = 150
 
