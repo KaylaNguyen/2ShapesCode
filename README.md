@@ -33,3 +33,5 @@ Triangle detection code adapted from Keying Gu'17, written by Kayla Nguyen'18
 *Summer Research 2015*
 
 *CS395 Independent Study Fall 2015*
+
+Website: https://sites.google.com/a/mtholyoke.edu/robotics-summer-2015/kayla
